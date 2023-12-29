@@ -1,0 +1,11 @@
+azure-identity
+azure-mgmt-resource
+azure-mgmt-storage
+azure-storage-blob
+azure-ai-ml
+pyyaml
+python-dotenv
+azureml-mlflow
+scikit-learn
+pandas
+numpy

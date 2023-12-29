@@ -1,0 +1,5 @@
+.venv
+backup
+*.csv
+.env
+temp
