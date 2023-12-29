@@ -1,4 +1,4 @@
-# DDesbravando Machine Learning na Azure com um exemplo completo: Parte 1 - Preparação do Ambiente
+# Desbravando Machine Learning na Azure com um exemplo completo: Parte 1 - Preparação do Ambiente
 
 ## Introdução
 
