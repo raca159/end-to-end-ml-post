@@ -4,6 +4,8 @@
 
 Dando sequência ao nosso primeiro post sobre Machine Learning na Azure, estamos de volta para a tão aguardada segunda parte. Na [primeira parte](https://www.azurebrasil.cloud/desbravando-machine-learning-na-azure-parte-1-preparacao-do-ambiente/) focamos em preparar o terreno, criando os recursos necessários na Azure. Agora, direcionamos nosso foco para a implementação do pré processamento, treinamento de modelos com busca de hiperparâmetros e, para completar, a criação e teste de um endpoint de inferência.
 
+Lembrando que todo o código fica disponibilizado no repositório ([end-to-end-ml-post](https://github.com/raca159/end-to-end-ml-post)).
+
 ## Desvendando o Workflow: Os passos que serão feitos
 
 Com a conclusão da primeira etapa e a configuração do ambiente realizada, nosso foco agora se volta para a segunda etapa, onde implementamos um modelo em produção.

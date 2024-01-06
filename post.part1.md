@@ -34,8 +34,8 @@ Ao entrarmos no pré-processamento de dados, destacaremos a importância da divi
 ### 2. Segunda Etapa
 #### 2.1 Análise e Pré-processamento do Dataset:
 - Realizaremos uma análise detalhada das características do dataset, identificando padrões e estabelecendo um pipeline adequado para o pré-processamento de dados. Essa etapa é crucial para assegurar que os dados estejam prontos para serem consumidos pelo modelo.
-#### 2.2 Criar um Job para Busca de Hyperparâmetros:
-- Lançaremos um job no cluster configurado para realizar a busca de hyperparâmetros. Esses ajustes são fundamentais e impactam diretamente o desempenho do modelo. O Azure Machine Learning simplifica esse processo, permitindo automação e execução eficiente de experimentos em paralelo.
+#### 2.2 Criar um Job para Busca de hiperparâmetros:
+- Lançaremos um job no cluster configurado para realizar a busca de hiperparâmetros. Esses ajustes são fundamentais e impactam diretamente o desempenho do modelo. O Azure Machine Learning simplifica esse processo, permitindo automação e execução eficiente de experimentos em paralelo.
 #### 2.3 Seleção do Melhor Modelo:
 - Com base nos resultados dos experimentos, escolheremos o melhor modelo, utilizando a acurácia como critério nesta instância. Essa escolha informada é essencial para garantir que o modelo final seja o mais eficaz possível.
 #### 2.4 Criar um Endpoint de Inferência:
@@ -49,7 +49,7 @@ Podemos resumir os passos que serão feitos como segue a figure abaixo:
 
 ![Workflow](imgs/workflow.png)
 
-Criamos o resource group, depois o storage account e fazemos o upload do dataset, nesse caso utilizaremos um dataset contido um um arquivo `.csv`. Depois criaremos um ambiente de trabalho Azure Machine Learning onde faremos a configuração do ambiente, configuração do cluster de computação, o lançamento da busca de hyperparâmetros, obteremos um modelo e criaremos um endpoint para inferência com este modelo.
+Criamos o resource group, depois o storage account e fazemos o upload do dataset, nesse caso utilizaremos um dataset contido um um arquivo `.csv`. Depois criaremos um ambiente de trabalho Azure Machine Learning onde faremos a configuração do ambiente, configuração do cluster de computação, o lançamento da busca de hiperparâmetros, obteremos um modelo e criaremos um endpoint para inferência com este modelo.
 
 ## Primeira Seção do Desenvolvimento: Setando o Ambiente e Dependências
 
@@ -208,7 +208,7 @@ Como podemos ver, agora temos a parte de dados concluído, temos o dataset pront
 
 ## Terceira Parte do Desenvolvimento: Criando o Ambiente do Azure Machine Learning Studio
 
-Agora que configuramos o Resource Group e o Container com os dados, podemos avançar para a criação da infraestrutura necessária para treinar nossos modelos no Azure Machine Learning. Nesta seção, concentraremos nossos esforços na criação de um Workspace, um Environment e um Compute Cluster para conduzir a busca de hyperparameters.
+Agora que configuramos o Resource Group e o Container com os dados, podemos avançar para a criação da infraestrutura necessária para treinar nossos modelos no Azure Machine Learning. Nesta seção, concentraremos nossos esforços na criação de um Workspace, um Environment e um Compute Cluster para conduzir a busca de hiperparâmetros.
 
 Iniciaremos criando um cliente Python para interagir com o Azure Machine Learning. O código abaixo será usado para criar o Workspace:
 ```python
