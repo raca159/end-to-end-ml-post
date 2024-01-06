@@ -4,17 +4,23 @@ Script dedicado ao processo de criar o ambiente necessário para a execução do
 import os
 import yaml
 import warnings
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import requests
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.resource import ResourceManagementClient
 from azure.storage.blob import BlobServiceClient, ContainerClient
 from azure.mgmt.resource.resources.models import DeploymentMode
-from azure.ai.ml import MLClient
+from azure.ai.ml import MLClient, Input, command
+from azure.ai.ml.constants import AssetTypes, InputOutputModes
 from azure.ai.ml.entities import (
     Workspace,
     Environment,
-    AmlCompute
+    AmlCompute,
+    Model,
+    Job,
+    ManagedOnlineEndpoint,
+    ManagedOnlineDeployment,
+    CodeConfiguration
 )
 
 # Função para criar ou atualizar um Resource Group
@@ -188,6 +194,128 @@ def get_or_create_compute_cluster(ml_client: MLClient, cluster_config: Dict[str,
     cluster_basic = AmlCompute(**cluster_config)
     # Cria ou atualiza o cluster no ML Studio via cliente
     return ml_client.begin_create_or_update(cluster_basic).result()
+
+# função para adquirir o URI dos dados no blob para passar para o Job de treinamento de modelo
+def get_datafile_in_blob_for_job_sweep(
+        containername: str,
+        accountname: str,
+        filename: str,
+        folder: Optional[str]=None,
+    ):
+    '''
+    Esta função recebe as informações da conta de armazenamento até chegar ao arquivo desejado em um blob.
+    Com o URI construído, ela define o AssetType; neste caso, estamos trabalhando com um arquivo.
+    Em seguida, ela define o InputOutputMode, já que só estaremos lendo os dados, montaremos os dados como somente leitura (Read-Only).
+    '''
+    if folder is None:
+        path = f'wasbs://{containername}@{accountname}.blob.core.windows.net/{filename}'
+    else:
+        path = f'wasbs://{containername}@{accountname}.blob.core.windows.net/{folder}/{filename}'
+    data_type = AssetTypes.URI_FILE
+    mode = InputOutputModes.RO_MOUNT
+    return Input(type=data_type, path=path, mode=mode)
+
+# função para lançar a busca de hyperparameteros
+def launch_hyperparam_search(
+        command_str: str, inputs: Dict[str, Any],
+        sweep_inputs: Dict[str, Any], experiment_name: str,
+        ml_client: MLClient, compute: str, environment: str,
+        sampling_algorithm: str="bayesian", primary_metric: str="Score",
+        goal: str="maximize", max_total_trials: int=12, max_concurrent_trials: int=2,
+        code: str="./src"
+    ):
+    '''
+    Esta função lança a busca de hiperparâmetros. Observe que ela possui parâmetros adicionais definidos por padrão.
+    O `sampling_algorithm` dita como a busca de hiperparâmetros explorará os parâmetros dentro do espaço de busca.
+    Os parâmetros primary_metric e goal estão associados à métrica registrada durante o treinamento que deve ser usada como referência para a melhor execução.
+    Os parâmetros max_total_trials e max_concurrent_trials lidam com a quantidade de jobs que serão executados durante a busca de hiperparâmetros.
+    Os parâmetros experiment_name, ml_client, compute, environment estão relacionados aos parâmetros do ambiente.
+    '''
+
+    # Primeiro, criamos um job com o comando bash, as informações de input e as informações do ambiente
+    job = command(
+        inputs=inputs, compute=compute, environment=environment,
+        code=code, command=command_str, experiment_name=experiment_name,
+        display_name=experiment_name,
+    )
+    # Em seguida, aplicamos o espaço de busca de hiperparâmetros ao Job
+    job_for_sweep = job(**sweep_inputs)
+
+    # Depois, definimos os parâmetros da busca de hiperparâmetros
+    sweep_job = job_for_sweep.sweep(
+        sampling_algorithm=sampling_algorithm,
+        primary_metric=primary_metric, goal=goal,
+        max_total_trials=max_total_trials,
+        max_concurrent_trials=max_concurrent_trials
+    )
+    # E finalmente, criamos a execução e retornamos o job em execução para que possamos monitorá-lo dentro do Python
+    returned_sweep_job = ml_client.create_or_update(sweep_job)
+    returned_sweep_job = ml_client.jobs.get(name=returned_sweep_job.name)
+    return returned_sweep_job
+
+# função para registrar melhor modelo do Experiment
+def register_best_model_from_sweep(ml_client: MLClient, returned_sweep_job: Job, model_name: str, register_name="model-test") -> Model:
+    '''
+    Esta função utiliza o ml client e o Job de busca de hiperparâmetros para selecionar a melhor execução usando o `best_child_run_id` do Job.
+    Com a melhor execução, podemos acessar o modelo na pasta `outputs/artifacts` da execução e selecionar a pasta com o `model_name`.
+    Observe que o `model_name` precisa corresponder ao nome do modelo usado no script de treinamento.
+
+    Com isso, registramos o modelo sob o `register_name` e agora ele pode ser acessado na guia Model no Azure Machine Learning.
+    '''
+    # model_name -> passado como comando do job
+    if returned_sweep_job.status == "Completed":
+        # Primeiro, obtemos a execução que nos deu o melhor resultado
+        best_run = returned_sweep_job.properties["best_child_run_id"]
+        # Obtemos o modelo desta execução
+        model = Model(
+            path="azureml://jobs/{}/outputs/artifacts/paths/{}/".format(
+                best_run, model_name
+            ),
+            name=register_name,
+            description="Modelo criado a partir da execução.",
+            type="custom_model",
+        )
+        registered_model = ml_client.models.create_or_update(model=model)
+    else:
+        print('A busca ainda está em andamento.')
+        registered_model = None
+    return registered_model
+
+# função para criar endpoint
+def create_endpoint_specs(ml_client: MLClient, endpoint_name: str, auth_mode: str="key", **kwargs):
+    '''
+    Esta função utiliza o ml client para criar um endpoint com o `endpoint_name` e o modo de autenticação por chave.
+    '''
+    # Criar um endpoint online
+    endpoint = ManagedOnlineEndpoint(
+        name=endpoint_name,
+        auth_mode=auth_mode,
+        **kwargs
+    )
+    return ml_client.online_endpoints.begin_create_or_update(endpoint).result()
+
+# função para dar deploy do endpoint usando o melhor modelo e o Enviroment construido.
+def get_or_create_endpoint_deployment(
+        ml_client: MLClient, deployment_name:str, model: Model,
+        env: Environment, endpoint_name: str,
+        code: str="./src", filepath: str="score.py",
+        instance_type: str="Standard_DS3_v2"
+    ):
+    '''
+    Esta função utiliza o ml client com o endpoint criado para criar um deployment com o nome `deployment_name`.
+    Precisamos passar o Enviroment e o Model para que o deployment saiba qual modelo executar e qual ambiente usar para a execução.
+    code se relaciona à pasta onde o script está e filepath é o nome do arquivo.
+    O instance_type é a instância de computação a ser usada durante a inferência.
+    '''
+    deployment = ManagedOnlineDeployment(
+        name=deployment_name, endpoint_name=endpoint_name,
+        model=model,
+        environment=env,
+        code_configuration=CodeConfiguration(code=code, scoring_script=filepath),
+        instance_type=instance_type,
+        instance_count=1,
+    )
+    return ml_client.online_deployments.begin_create_or_update(deployment=deployment).result()
 
 # função para deletar permanentemente os recursos de Machine Learning
 def ml_workspace_deletion(ml_client: MLClient, workspace: str):
