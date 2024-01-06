@@ -314,7 +314,7 @@ No próximo post, vamos desenvolver um script de treinamento, lançar uma busca 
 
 Espero que este post tenha sido útil para você começar com o Azure Machine Learning e nos vemos no próximo!
 
-# Desbravando Machine Learning na Azure com um exemplo completo: Parte 2 - Treino, teste e inferência
+# Desbravando Machine Learning na Azure com um exemplo completo: Parte 2 - Treino, Teste e Inferência
 
 ## Introdução
 
@@ -331,18 +331,16 @@ Nosso objetivo principal é evidenciar a facilidade de construir pipelines na Az
 Podemos adentrar em diferentes estudos, explorando diversas arquiteturas de modelos e métodos de feature engineering nos posts seguintes.
 
 ### Segunda Etapa
-#### 1 Análise e Pré-processamento do Dataset:
+#### 1. Análise e Pré-processamento do Dataset:
 - Realizaremos uma análise detalhada das características do dataset, identificando padrões e estabelecendo um pipeline adequado para o pré-processamento de dados. Essa etapa é crucial para assegurar que os dados estejam prontos para serem consumidos pelo modelo.
-#### 2 Criar um Job para Busca de hiperparâmetros:
+#### 2. Criar um Job para Busca de hiperparâmetros:
 - Lançaremos um job no cluster configurado para realizar a busca de hiperparâmetros. Esses ajustes são fundamentais e impactam diretamente o desempenho do modelo. O Azure Machine Learning simplifica esse processo, permitindo automação e execução eficiente de experimentos em paralelo.
-#### 3 Seleção do Melhor Modelo:
+#### 3. Seleção do Melhor Modelo:
 - Com base nos resultados dos experimentos, escolheremos o melhor modelo, utilizando a acurácia como critério nesta instância. Essa escolha informada é essencial para garantir que o modelo final seja o mais eficaz possível.
-#### 4 Criar um Endpoint de Inferência:
+#### 4. Criar um Endpoint de Inferência:
 - Finalmente, implementaremos um endpoint de inferência no Azure Machine Learning. Isso nos permitirá realizar inferências em tempo real com o modelo encontrado.
-#### 5 Testar o Modelo através do Endpoint:
+#### 5. Testar o Modelo através do Endpoint:
 - Concluiremos nosso workflow testando o modelo por meio do endpoint criado. Este é o último passo para garantir que nosso modelo esteja pronto para fornecer previsões precisas no ambiente de produção.
-
-# Primeira Seção do Desenvolvimento: Rodando a Busca de hiperparâmetros em um Modelo de Machine Learning
 
 Aqui, assumimos que o ambiente já está configurado, onde temos os dados já disponíveis no storage account e temos um Machine Learning Workspace com um ambiente customizado e um cluster pronto para ser utilizado.
 
@@ -350,9 +348,9 @@ Aqui, assumimos que o ambiente já está configurado, onde temos os dados já di
 
 Nesta seção, abordaremos o processo de busca de hiperparâmetros utilizando o cluster no Azure Machine Learning. Optamos por selecionar o modelo Random Forest devido à sua abordagem clássica, mas vale destacar que poderíamos escolher desde modelos simples, como regressão logística, até modelos mais complexos, como redes neurais.
 
-A escolha do modelo dependerá do tamanho do dataset e da quantidade de features disponíveis, além dos requisitos do projeto. Deve-se lembrar que um dos pontos mais importantes na implementação de soluções com Machine Learning é a transparência e interpretabilidade. Podemos mitigar erros através de mecanismos de validação robustos, como, por exemplo, o uso de treinamento e teste via K-Folds, mas a capacidade de interpretar as escolhas do modelo é de suma importância.
+A escolha do modelo dependerá do tamanho do dataset e da quantidade de features disponíveis, além dos requisitos do projeto. Deve-se lembrar que um dos pontos mais importantes na implementação de soluções com Machine Learning é a transparência e interpretabilidade. Podemos mitigar erros por meio de mecanismos de validação robustos, como, por exemplo, o uso de treinamento e teste via K-Folds, mas a capacidade de interpretar as escolhas do modelo é de suma importância.
 
-Com a escolha do modelo feita, passamos a desenvolver o script de treinamento do modelo. Para isso, é necessário pensar no pré processamento dos dados, uma vez que eles são numéricos, booleanos e categóricos.
+Com a escolha do modelo feita, passamos a desenvolver o script de treinamento do modelo. Para isso, é necessário pensar no pré-processamento dos dados, uma vez que eles são numéricos, booleanos e categóricos.
 Uma solução eficaz é utilizar o Pipeline da biblioteca scikit-learn, onde podemos unir o modelo ao pré-processamento dos dados. Isso simplifica o script de inferência, uma vez que o processamento fica contido no modelo salvo.
 
 O conjunto de dados [Heart Attack Analysis & Prediction Dataset](https://www.kaggle.com/datasets/rashikrahmanpritom/heart-attack-analysis-prediction-dataset/) apresenta uma tarefa de classificação binária com as seguintes características:
@@ -523,7 +521,7 @@ if __name__ == '__main__':
     main()
 ```
 
-## Implementando a Busca de hiperparâmetros no Azure Machine Learning
+## Implementando a Busca de Hiperparâmetros no Azure Machine Learning
 
 Agora que temos o ambiente pronto, o modelo, o pipeline de processamento de dados definido e o script de treinamento preparado, podemos avançar para a busca de hiperparâmetros. A Azure oferece suporte a esse processo, permitindo que lancemos um job para o cluster com o objetivo de executar a busca de hiperparâmetros e visualizar os resultados no portal enquanto está em execução.
 
@@ -570,7 +568,7 @@ python model_train.py --input_data ${{inputs.input_data}} --model_name ${{inputs
 Isso garante que o script de treinamento receba todos os parâmetros necessários para executar a busca de hiperparâmetros.
 Com todos esses elementos prontos, podemos lançar a busca de hiperparâmetros na Azure Machine Learning, acompanhando os resultados no portal enquanto o processo está em execução.
 
-## Lançando a Busca de hiperparâmetros no Azure Machine Learning
+## Lançando a Busca de Hiperparâmetros no Azure Machine Learning
 
 Agora que temos o comando para o treinamento definido, o input para o modelo, e o espaço de busca definido, podemos usar o `ml_client` para lançar a busca de hiperparâmetros no cluster. Para isso, criaremos uma função de suporte que cria um `Job` com as configurações de `Workspace`, `Environment`, `Compute`, e script de treinamento e aplica a busca de hiperparâmetros usando o comando sweep. Essa função permite que você ajuste a quantidade máxima de execuções que a busca deve fazer.
 
@@ -629,7 +627,7 @@ Como foram registrados os parâmetros para cada execução usando o `mlflow`. Po
 
 Note que as métricas e parâmetros a serem registrados são totalmente customizáveis através do `mlflow`. Nesse caso, regsitramos apenas as métricas pertinentes ao processo, mas o sistema é flexível para suportar casos mais complexos onde é interessante, por exemplo, treinar modelos de Deep Learning e registrar o processo ao longo do treinamento do modelo.
 
-# Selecionando o Melhor Modelo e Criando o Ponto de Inferência
+## Selecionando o Melhor Modelo e Criando o Ponto de Inferência
 
 Depois que a busca de parâmetros termina, podemos selecionar o melhor modelo, este processo é facilmente feito através da propriedade `best_child_run_id` da execução raiz lançada.
 Para criar o endpoint, precisamos registrar o melhor modelo no repositório de modelos. Desta forma, podemos atualizar o melhor modelo à medida que aprimoramos o modelo com treinamento, novas features, mais dados, etc. Isso nos permite versionar e ter controle das diferentes versões de melhores modelos e atualizar os endpoints a partir dessa informação.
@@ -722,7 +720,7 @@ _ = env_builder.get_or_create_endpoint_deployment(
 Este código cria um endpoint e um deployment associado a esse endpoint. Lembre-se de configurar adequadamente o ambiente e os parâmetros conforme necessário para o seu caso de uso específico. Podemos ver o endpoint atráves do portal:
 ![Azure Machine Learning Endpoint](imgs/img_16.png)
 
-# Testando o Endpoint de Inferência
+## Testando o Endpoint de Inferência
 
 Com o endpoint criado, agora podemos nos concentrar em testá-lo usando a biblioteca `requests`. Para isso, devemos acessar a chave de autenticação disponível no portal da Azure. Vá para o recurso Azure Machine Learning, selecione a aba "Endpoints", escolha o endpoint atual e copie a chave. A chave será armazenada como uma variável de ambiente. Para obter o URL do endpoint, podemos acessar o portal ou usar o `ml_client`.
 

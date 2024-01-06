@@ -404,7 +404,7 @@ _ = env_builder.get_or_create_endpoint_deployment(
 Este código cria um endpoint e um deployment associado a esse endpoint. Lembre-se de configurar adequadamente o ambiente e os parâmetros conforme necessário para o seu caso de uso específico. Podemos ver o endpoint atráves do portal:
 ![Azure Machine Learning Endpoint](imgs/img_16.png)
 
-# Testando o Endpoint de Inferência
+## Testando o Endpoint de Inferência
 
 Com o endpoint criado, agora podemos nos concentrar em testá-lo usando a biblioteca `requests`. Para isso, devemos acessar a chave de autenticação disponível no portal da Azure. Vá para o recurso Azure Machine Learning, selecione a aba "Endpoints", escolha o endpoint atual e copie a chave. A chave será armazenada como uma variável de ambiente. Para obter o URL do endpoint, podemos acessar o portal ou usar o `ml_client`.
 
